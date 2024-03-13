@@ -26,15 +26,46 @@ public class GraphStuff {
         return dijkstraAlg.getPath(start, end);
     }
 
+
+
+   /* public double Heuristicfunction (OWLOntology adjnode, OWLOntology end,
+                                     Graph<OWLOntology, DefaultEdge> graph)
+    {
+        GraphPath<OWLOntology, DefaultEdge> path = Dijkstrapath(adjnode, end, graph);
+        //gets the sum of the weight of the path members
+        double fullweight = path.getWeight();
+        //gets the ammount of edges in the path
+        int length = path.getLength();
+
+        return fullweight/length;
+    }*/
+
     public GraphPath<OWLOntology, DefaultEdge> AStarpath (OWLOntology start, OWLOntology end,
                                                               Graph<OWLOntology, DefaultEdge> graph){
+        class averageincompatabilityweight
+                implements AStarAdmissibleHeuristic<OWLOntology>
+        {
+            @Override
+            public double getCostEstimate(OWLOntology source, OWLOntology target) {
+                GraphPath<OWLOntology, DefaultEdge> path = Dijkstrapath(source, target, graph);
+                double fullweight = path.getWeight();
+                int length = path.getLength();
+
+                //because edge weight will be how well they fit in % they will be <=1
+                //therefore 1-average so the edges with the leas % difference are preferred
+                return 1-(fullweight/length);
+            }
+        }
+
+        AStarAdmissibleHeuristic<OWLOntology> admissibleHeuristic = new averageincompatabilityweight();
         //heuristic not yet implemented, note to myself - ask about it
         //possibly g(n) + h(n)? g(n) start -> node | h(n) node -> goal
-        AStarShortestPath<OWLOntology, DefaultEdge> AStarAlg = new AStarShortestPath<>(graph,);
+        AStarShortestPath<OWLOntology, DefaultEdge> AStarAlg = new AStarShortestPath<>(graph, admissibleHeuristic);
 
 
         return AStarAlg.getPath(start, end);
     }
+
 
     //returns an unweighted graph from a multimap of Ontologies
     public DirectedMultigraph<OWLOntology, DefaultEdge> genGraph (Multimap<OWLOntology, OWLOntology> ontomap){
