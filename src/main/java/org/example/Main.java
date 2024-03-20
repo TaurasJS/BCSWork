@@ -1,12 +1,23 @@
 package org.example;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import fr.lirmm.yamplusplus.yamppls.YamppUtils;
+import org.jgrapht.GraphPath;
+import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.graph.DirectedWeightedMultigraph;
+import org.mapdb.Fun;
 import org.semanticweb.owlapi.io.StringDocumentTarget;
+import fr.lirmm.yamplusplus.yamppls.YamppOntologyMatcher;
 import org.semanticweb.owlapi.model.*;
+import org.example.GraphStuff.*;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URI;
 
 public class Main {
-    public static void main(String[] args) throws OWLOntologyCreationException, OWLOntologyStorageException {
+    public static void main(String[] args) throws OWLOntologyCreationException, OWLOntologyStorageException, IOException {
         OntologyHelper oh = new OntologyHelper();
         OWLOntology o = oh.createOntology("http://Testing.com/Facebook.owl");
         OWLClass Account = oh.createClass("http://Testing.com/Facebook.owl#Account");
@@ -67,13 +78,43 @@ public class Main {
                 oh.addDataToIndividual(o, JohnSmith, Twitter, "http://Testing.com/x.owl/JohnSmith")
         );
 
-        File file = new File("ontos/Facebook.owl");
+       /* File file = new File("ontos/Facebook.owl");
         File filex = new File("ontos/x.owl");
         File fileclient = new File("ontos/client.owl");
         IRI documentIRI = IRI.create(fileclient);
         StringDocumentTarget sdt = new StringDocumentTarget();
         oh.writeOntology(client, sdt);
         System.out.println(sdt.toString());
-        oh.m.saveOntology(client, documentIRI);
+        oh.m.saveOntology(client, documentIRI);*/
+
+        //Testing of graph creation and pathfinding algorithms
+
+        OWLOntology Client = oh.createOntology("http://Testing.com/Client.owl");
+        OWLOntology Target = oh.createOntology("http://Testing.com/Target.owl");
+        OWLOntology A = oh.createOntology("http://Testing.com/A.owl");
+        OWLOntology B = oh.createOntology("http://Testing.com/B.owl");
+        OWLOntology C = oh.createOntology("http://Testing.com/C.owl");
+        OWLOntology D = oh.createOntology("http://Testing.com/D.owl");
+        Multimap<OWLOntology, Fun.Tuple2<OWLOntology, Double>> ontomap = ArrayListMultimap.create();
+
+        //example of this mapping is in progress report presentation
+        ontomap.put(Client, new Fun.Tuple2<>(A, 0.2));
+        ontomap.put(Client, new Fun.Tuple2<>(B, 0.2));
+        ontomap.put(A, new Fun.Tuple2<>(C, 0.3));
+        ontomap.put(A, new Fun.Tuple2<>(D, 0.4));
+        ontomap.put(B, new Fun.Tuple2<>(C, 0.15));
+        ontomap.put(B, new Fun.Tuple2<>(D, 0.75));
+        ontomap.put(C, new Fun.Tuple2<>(Target, 0.1));
+        ontomap.put(D, new Fun.Tuple2<>(Target, 0.3));
+
+        GraphStuff gstuff = new GraphStuff();
+        DirectedWeightedMultigraph<OWLOntology, DefaultWeightedEdge> graph =  gstuff.genGraph(ontomap);
+        GraphPath<OWLOntology, DefaultWeightedEdge> path = gstuff.AStarpath(Client, Target, graph);
+        System.out.println(path);
+
+
+
+
+
     }
 }

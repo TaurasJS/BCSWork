@@ -8,6 +8,7 @@ import org.jgrapht.alg.interfaces.ShortestPathAlgorithm.*;
 import org.jgrapht.alg.interfaces.*;
 import org.jgrapht.alg.shortestpath.*;
 import org.jgrapht.graph.*;
+import org.mapdb.Fun;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.w3c.dom.Node;
 
@@ -19,9 +20,9 @@ public class GraphStuff {
     //start - client or other Otnology
     //End - Ontology node that has desired information
     // graph - graph of ontologies with for now unweighted edges
-    public GraphPath<OWLOntology, DefaultEdge> Dijkstrapath (OWLOntology start, OWLOntology end,
-                                                         Graph<OWLOntology, DefaultEdge> graph){
-        DijkstraShortestPath<OWLOntology, DefaultEdge> dijkstraAlg = new DijkstraShortestPath<>(graph);
+    public GraphPath<OWLOntology, DefaultWeightedEdge> Dijkstrapath (OWLOntology start, OWLOntology end,
+                                                         Graph<OWLOntology, DefaultWeightedEdge> graph){
+        DijkstraShortestPath<OWLOntology, DefaultWeightedEdge> dijkstraAlg = new DijkstraShortestPath<>(graph);
 
         return dijkstraAlg.getPath(start, end);
     }
@@ -40,14 +41,14 @@ public class GraphStuff {
         return fullweight/length;
     }*/
 
-    public GraphPath<OWLOntology, DefaultEdge> AStarpath (OWLOntology start, OWLOntology end,
-                                                              Graph<OWLOntology, DefaultEdge> graph){
+    public GraphPath<OWLOntology, DefaultWeightedEdge> AStarpath (OWLOntology start, OWLOntology end,
+                                                              Graph<OWLOntology, DefaultWeightedEdge> graph){
         class averageincompatabilityweight
                 implements AStarAdmissibleHeuristic<OWLOntology>
         {
             @Override
             public double getCostEstimate(OWLOntology source, OWLOntology target) {
-                GraphPath<OWLOntology, DefaultEdge> path = Dijkstrapath(source, target, graph);
+                GraphPath<OWLOntology, DefaultWeightedEdge> path = Dijkstrapath(source, target, graph);
                 double fullweight = path.getWeight();
                 int length = path.getLength();
 
@@ -60,17 +61,19 @@ public class GraphStuff {
         AStarAdmissibleHeuristic<OWLOntology> admissibleHeuristic = new averageincompatabilityweight();
         //heuristic not yet implemented, note to myself - ask about it
         //possibly g(n) + h(n)? g(n) start -> node | h(n) node -> goal
-        AStarShortestPath<OWLOntology, DefaultEdge> AStarAlg = new AStarShortestPath<>(graph, admissibleHeuristic);
+        AStarShortestPath<OWLOntology, DefaultWeightedEdge> AStarAlg = new AStarShortestPath<>(graph, admissibleHeuristic);
 
 
         return AStarAlg.getPath(start, end);
     }
 
 
-    //returns an unweighted graph from a multimap of Ontologies
-    public DirectedMultigraph<OWLOntology, DefaultEdge> genGraph (Multimap<OWLOntology, OWLOntology> ontomap){
+    //returns a weighted graph from a multimap of Ontologies and tuples(Ontology/weight)
+    public DirectedWeightedMultigraph<OWLOntology, DefaultWeightedEdge> genGraph (Multimap<OWLOntology,
+                                                                    Fun.Tuple2<OWLOntology, Double>> ontomap){
 
-        DirectedMultigraph<OWLOntology, DefaultEdge> graph = new DirectedMultigraph<>(DefaultEdge.class);
+        DirectedWeightedMultigraph<OWLOntology, DefaultWeightedEdge> graph =
+                                                    new DirectedWeightedMultigraph<>(DefaultWeightedEdge.class);
 
         Set<OWLOntology> keyset = ontomap.keySet();
 
@@ -80,13 +83,15 @@ public class GraphStuff {
             if (!graph.vertexSet().contains(kont)) {
                 graph.addVertex(kont);
             }
-            Collection<OWLOntology> values = ontomap.get(kont);
-            for (OWLOntology ont : values) {
+            Collection<Fun.Tuple2<OWLOntology, Double>> values = ontomap.get(kont);
+            for (Fun.Tuple2<OWLOntology, Double> t2 : values) {
                 //adds if vertex does not exist for where edge goes to
-                if (!graph.vertexSet().contains(ont)) {
-                    graph.addVertex(ont);
+                if (!graph.vertexSet().contains(t2.a)) {
+                    graph.addVertex(t2.a);
                 }
-                graph.addEdge(kont, ont);
+                //adds edge
+                DefaultWeightedEdge edge = graph.addEdge(kont, t2.a);
+                graph.setEdgeWeight(edge, t2.b); //adds weight to that edge from the tuple
             }
         }
         return graph;
