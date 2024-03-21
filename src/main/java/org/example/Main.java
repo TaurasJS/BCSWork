@@ -2,13 +2,11 @@ package org.example;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import fr.lirmm.yamplusplus.yamppls.YamppUtils;
 import org.jgrapht.GraphPath;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.DirectedWeightedMultigraph;
 import org.mapdb.Fun;
 import org.semanticweb.owlapi.io.StringDocumentTarget;
-import fr.lirmm.yamplusplus.yamppls.YamppOntologyMatcher;
 import org.semanticweb.owlapi.model.*;
 import org.example.GraphStuff.*;
 

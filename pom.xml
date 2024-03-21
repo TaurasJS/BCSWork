@@ -38,6 +38,13 @@
             <artifactId>owlapi-api</artifactId>
             <version>5.5.0</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/fr.lirmm.yamplusplus/yampp-ls -->
+        <dependency>
+            <groupId>fr.lirmm.yamplusplus</groupId>
+            <artifactId>yampp-ls</artifactId>
+            <version>0.1.2</version>
+        </dependency>
+
 
     </dependencies>
 
