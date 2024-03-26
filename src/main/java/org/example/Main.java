@@ -106,9 +106,16 @@ public class Main {
         ontomap.put(D, new Fun.Tuple2<>(Target, 0.3));
 
         GraphStuff gstuff = new GraphStuff();
+        long startTimegraph = System.currentTimeMillis();
         DirectedWeightedMultigraph<OWLOntology, DefaultWeightedEdge> graph =  gstuff.genGraph(ontomap);
+        long endTimegraph = System.currentTimeMillis();
+
+        long startTimepath = System.currentTimeMillis();
         GraphPath<OWLOntology, DefaultWeightedEdge> path = gstuff.AStarpath(Client, Target, graph);
+        long endTimepath = System.currentTimeMillis();
         System.out.println(path);
+        System.out.println("To create a graph: " + (endTimegraph-startTimegraph) + " milliseconds");
+        System.out.println("To find a path: " + (endTimepath-startTimepath) + " milliseconds");
 
 
 

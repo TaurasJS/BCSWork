@@ -1,6 +1,10 @@
 package org.example;
 
 import com.google.common.collect.Multimap;
+/*import it.giacomobergami.microservices.Microservice;          IMPORTS WHEN USING simple-ontology-allignment
+import it.giacomobergami.microservices.MicroserviceFunction;        AS A LIBRARY.
+import it.giacomobergami.simpleschema.IConcept;
+import it.giacomobergami.simpleschema.NativeTypes; */
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.jgrapht.*;
 import org.jgrapht.alg.connectivity.*;
@@ -21,9 +25,8 @@ public class GraphStuff {
     //End - Ontology node that has desired information
     // graph - graph of ontologies with for now unweighted edges
     public GraphPath<OWLOntology, DefaultWeightedEdge> Dijkstrapath (OWLOntology start, OWLOntology end,
-                                                         Graph<OWLOntology, DefaultWeightedEdge> graph){
+                                                                     Graph<OWLOntology, DefaultWeightedEdge> graph){
         DijkstraShortestPath<OWLOntology, DefaultWeightedEdge> dijkstraAlg = new DijkstraShortestPath<>(graph);
-
         return dijkstraAlg.getPath(start, end);
     }
 
@@ -41,8 +44,8 @@ public class GraphStuff {
         return fullweight/length;
     }*/
 
-    public GraphPath<OWLOntology, DefaultWeightedEdge> AStarpath (OWLOntology start, OWLOntology end,
-                                                              Graph<OWLOntology, DefaultWeightedEdge> graph){
+    public GraphPath<OWLOntology, DefaultWeightedEdge> AStarpath (OWLOntology start, OWLOntology end, Graph<OWLOntology,
+            DefaultWeightedEdge> graph){
         class averageincompatabilityweight
                 implements AStarAdmissibleHeuristic<OWLOntology>
         {
@@ -51,29 +54,21 @@ public class GraphStuff {
                 GraphPath<OWLOntology, DefaultWeightedEdge> path = Dijkstrapath(source, target, graph);
                 double fullweight = path.getWeight();
                 int length = path.getLength();
-
-                //because edge weight will be how well they fit in % they will be <=1
-                //therefore 1-average so the edges with the leas % difference are preferred
                 return 1-(fullweight/length);
             }
         }
-
         AStarAdmissibleHeuristic<OWLOntology> admissibleHeuristic = new averageincompatabilityweight();
-        //heuristic not yet implemented, note to myself - ask about it
-        //possibly g(n) + h(n)? g(n) start -> node | h(n) node -> goal
         AStarShortestPath<OWLOntology, DefaultWeightedEdge> AStarAlg = new AStarShortestPath<>(graph, admissibleHeuristic);
-
-
         return AStarAlg.getPath(start, end);
     }
 
 
     //returns a weighted graph from a multimap of Ontologies and tuples(Ontology/weight)
     public DirectedWeightedMultigraph<OWLOntology, DefaultWeightedEdge> genGraph (Multimap<OWLOntology,
-                                                                    Fun.Tuple2<OWLOntology, Double>> ontomap){
+            Fun.Tuple2<OWLOntology, Double>> ontomap){
 
         DirectedWeightedMultigraph<OWLOntology, DefaultWeightedEdge> graph =
-                                                    new DirectedWeightedMultigraph<>(DefaultWeightedEdge.class);
+                new DirectedWeightedMultigraph<>(DefaultWeightedEdge.class);
 
         Set<OWLOntology> keyset = ontomap.keySet();
 
@@ -96,5 +91,63 @@ public class GraphStuff {
         }
         return graph;
     }
+
+ /*                 CODE DONE USING simple-ontology-alignment AS A CODEBASE
+    public List<NativeTypes> getoutputTypes (Microservice microservice){
+        List<NativeTypes> typesList = new ArrayList<NativeTypes>();
+
+        for(MicroserviceFunction function : microservice.ls)
+        {
+
+            typesList.add(function.microserviceResult.getType());
+        }
+
+        return typesList;
+    }
+
+    public List<NativeTypes> getinputTypes (Microservice microservice){
+        List<NativeTypes> typesList = new ArrayList<NativeTypes>();
+
+        HashMap<String, IConcept> entrymap = new HashMap<String, IConcept>();
+        for(MicroserviceFunction function : microservice.ls)
+        {
+            entrymap = function.input_field_function;
+            for (Map.Entry<String, IConcept> entry : entrymap.entrySet()){
+                typesList.add(entry.getValue().getType());
+            }
+        }
+
+        return typesList;
+    }
+
+    public DirectedMultigraph<Microservice, DefaultEdge> genGraphmicro (Graph<OWLOntology,
+            DefaultWeightedEdge> ontograph, List<Microservice> microserviceList){
+
+        DirectedMultigraph<Microservice, DefaultEdge> micrograph =
+                new DirectedMultigraph<>(DefaultEdge.class);
+
+        for(int i = 0; i < (microserviceList.size()-1); i++)
+        {
+            if(!micrograph.vertexSet().contains(microserviceList.get(i)))
+            {
+                micrograph.addVertex(microserviceList.get(i));
+            }
+            for(int j = i+1; j < microserviceList.size(); j++)
+            {
+                if(ontograph.containsEdge(microserviceList.get(i).microserviceOntology,
+                        microserviceList.get(j).microserviceOntology )){
+
+                    if(!micrograph.vertexSet().contains(microserviceList.get(j))){
+                        micrograph.addVertex(microserviceList.get(j));
+                    }
+
+                    DefaultEdge edge = micrograph.addEdge(microserviceList.get(i), microserviceList.get(j));
+                }
+            }
+        }
+
+
+        return micrograph;
+    } */
 
 }
