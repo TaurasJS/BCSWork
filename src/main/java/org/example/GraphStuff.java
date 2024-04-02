@@ -120,6 +120,11 @@ public class GraphStuff {
         return typesList;
     }
 
+    public Boolean checkmicros (Microservice microservice1, Microservice microservice2)
+    {
+        return getinputTypes(microservice2).containsAll(getinputTypes(microservice1));
+    }
+
     public DirectedMultigraph<Microservice, DefaultEdge> genGraphmicro (Graph<OWLOntology,
             DefaultWeightedEdge> ontograph, List<Microservice> microserviceList){
 
@@ -128,26 +133,29 @@ public class GraphStuff {
 
         for(int i = 0; i < (microserviceList.size()-1); i++)
         {
+            // for all servicei ∈ Oi and servicej ∈ Oj do
             if(!micrograph.vertexSet().contains(microserviceList.get(i)))
             {
                 micrograph.addVertex(microserviceList.get(i));
             }
-            for(int j = i+1; j < microserviceList.size(); j++)
-            {
-                if(ontograph.containsEdge(microserviceList.get(i).microserviceOntology,
-                        microserviceList.get(j).microserviceOntology )){
+                for(int j = i+1; j < microserviceList.size(); j++)
+                {
+                    if(ontograph.containsEdge(microserviceList.get(i).microserviceOntology,
+                            microserviceList.get(j).microserviceOntology )){
 
-                    if(!micrograph.vertexSet().contains(microserviceList.get(j))){
-                        micrograph.addVertex(microserviceList.get(j));
+                            if(!micrograph.vertexSet().contains(microserviceList.get(j))){
+                                micrograph.addVertex(microserviceList.get(j));
+                            }
+                            //if output(service i) ⊑ input(service j)
+                        if (checkmicros(microserviceList.get(i), microserviceList.get(j))) {
+                            DefaultEdge edge = micrograph.addEdge(microserviceList.get(i), microserviceList.get(j));
+                        }
                     }
-
-                    DefaultEdge edge = micrograph.addEdge(microserviceList.get(i), microserviceList.get(j));
                 }
-            }
         }
 
 
         return micrograph;
-    } */
+    }*/
 
 }
