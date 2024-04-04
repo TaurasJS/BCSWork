@@ -122,7 +122,7 @@ public class GraphStuff {
 
     public Boolean checkmicros (Microservice microservice1, Microservice microservice2)
     {
-        return getinputTypes(microservice2).containsAll(getinputTypes(microservice1));
+        return getoutputTypes(microservice2).containsAll(getinputTypes(microservice1));
     }
 
     public DirectedMultigraph<Microservice, DefaultEdge> genGraphmicro (Graph<OWLOntology,
@@ -138,17 +138,20 @@ public class GraphStuff {
             {
                 micrograph.addVertex(microserviceList.get(i));
             }
-                for(int j = i+1; j < microserviceList.size(); j++)
-                {
-                    if(ontograph.containsEdge(microserviceList.get(i).microserviceOntology,
-                            microserviceList.get(j).microserviceOntology )){
 
-                            if(!micrograph.vertexSet().contains(microserviceList.get(j))){
+                for(int j = 0; j < microserviceList.size(); j++)
+                {
+                    if(j != i) {
+                        if (ontograph.containsEdge(microserviceList.get(i).microserviceOntology,
+                                microserviceList.get(j).microserviceOntology)) {
+
+                            if (!micrograph.vertexSet().contains(microserviceList.get(j))) {
                                 micrograph.addVertex(microserviceList.get(j));
                             }
                             //if output(service i) ⊑ input(service j)
-                        if (checkmicros(microserviceList.get(i), microserviceList.get(j))) {
-                            DefaultEdge edge = micrograph.addEdge(microserviceList.get(i), microserviceList.get(j));
+                            if (checkmicros(microserviceList.get(i), microserviceList.get(j))) {
+                                DefaultEdge edge = micrograph.addEdge(microserviceList.get(i), microserviceList.get(j));
+                            }
                         }
                     }
                 }
