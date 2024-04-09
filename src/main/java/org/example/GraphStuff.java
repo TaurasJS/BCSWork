@@ -1,10 +1,16 @@
 package org.example;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-/*import it.giacomobergami.microservices.Microservice;          IMPORTS WHEN USING simple-ontology-allignment
-import it.giacomobergami.microservices.MicroserviceFunction;        AS A LIBRARY.
+/*
+import it.giacomobergami.microservices.Microservice;
+import it.giacomobergami.microservices.MicroserviceFunction;
 import it.giacomobergami.simpleschema.IConcept;
-import it.giacomobergami.simpleschema.NativeTypes; */
+import it.giacomobergami.simpleschema.NativeTypes;
+import it.giacomobergami.simpleschema.Ontology;
+import it.giacomobergami.simpleschema.OntologyLoader;
+import it.giacomobergami.simpleschema.alignments.Alignment;
+*/
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.jgrapht.*;
 import org.jgrapht.alg.connectivity.*;
@@ -13,12 +19,71 @@ import org.jgrapht.alg.interfaces.*;
 import org.jgrapht.alg.shortestpath.*;
 import org.jgrapht.graph.*;
 import org.mapdb.Fun;
+import org.semanticweb.owlapi.io.StringDocumentTarget;
+import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 import org.w3c.dom.Node;
 
+import java.io.File;
 import java.util.*;
 
 public class GraphStuff {
+
+    /*          COMMENTED OUT CODE IS FROM WHEN USING SIMPLE-ONTOLOGY-ALIGNMENT AS CODEBASE
+
+
+    //will be used to change from OWLOntology to Ontology in simple-ontology-alignment.
+    public Ontology changeOntoType (OWLOntology owlOntology) throws  OWLOntologyStorageException{
+        OntologyHelper oh = new OntologyHelper();
+        File file = new File("ontology.txt");
+        IRI documentIRI = IRI.create(file);
+
+        StringDocumentTarget sdt = new StringDocumentTarget();
+        oh.m.saveOntology(owlOntology, documentIRI);
+
+        OntologyLoader.loadOntology("Ontology", "ontology.txt");
+        Ontology ontology = OntologyLoader.getLoadedOntology("Ontology");
+
+        return ontology;
+    }
+
+    public double alignmentscore (OWLOntology owlonto1, OWLOntology owlonto2) throws  OWLOntologyStorageException{
+        Ontology onto1 = changeOntoType(owlonto1);
+        Ontology onto2 = changeOntoType(owlonto2);
+
+        Alignment x = new Alignment(onto1, onto2);
+        double totalcost = 0;
+        for(var xp : x.getConceptCorrespondences())
+        {
+            totalcost += xp.getScore();
+        }
+        return totalcost;
+    }
+
+
+    public Multimap<OWLOntology, Fun.Tuple2<OWLOntology, Double>> genmap (List<OWLOntology> ontologies) throws  OWLOntologyStorageException{
+        Multimap <OWLOntology, Fun.Tuple2<OWLOntology, Double>> map = ArrayListMultimap.create();
+        double value = 0;
+
+        // -1 the last ontology is supposed to be the target one
+        for(int i = 0; i < ontologies.size()-1; i++)
+        {
+            for(int j = 1; j < ontologies.size(); j++)
+            {
+                // if not the same ontology
+                if(i != j)
+                {
+                    value = alignmentscore(ontologies.get(i), ontologies.get(j));
+                    map.put(ontologies.get(i), new Fun.Tuple2<>(ontologies.get(j), value));
+                }
+            }
+        }
+
+        return map;
+    }
+    */
 
 
     //start - client or other Otnology
@@ -92,7 +157,7 @@ public class GraphStuff {
         return graph;
     }
 
- /*                 CODE DONE USING simple-ontology-alignment AS A CODEBASE
+    /*
     public List<NativeTypes> getoutputTypes (Microservice microservice){
         List<NativeTypes> typesList = new ArrayList<NativeTypes>();
 
@@ -139,26 +204,35 @@ public class GraphStuff {
                 micrograph.addVertex(microserviceList.get(i));
             }
 
-                for(int j = 0; j < microserviceList.size(); j++)
-                {
-                    if(j != i) {
-                        if (ontograph.containsEdge(microserviceList.get(i).microserviceOntology,
-                                microserviceList.get(j).microserviceOntology)) {
+            for(int j = 0; j < microserviceList.size(); j++)
+            {
+                if(j != i) {
+                    if (ontograph.containsEdge(microserviceList.get(i).microserviceOntology,
+                            microserviceList.get(j).microserviceOntology)) {
 
-                            if (!micrograph.vertexSet().contains(microserviceList.get(j))) {
-                                micrograph.addVertex(microserviceList.get(j));
-                            }
-                            //if output(service i) ⊑ input(service j)
-                            if (checkmicros(microserviceList.get(i), microserviceList.get(j))) {
-                                DefaultEdge edge = micrograph.addEdge(microserviceList.get(i), microserviceList.get(j));
-                            }
+                        if (!micrograph.vertexSet().contains(microserviceList.get(j))) {
+                            micrograph.addVertex(microserviceList.get(j));
+                        }
+                        //if output(service i) ⊑ input(service j)
+                        if (checkmicros(microserviceList.get(i), microserviceList.get(j))) {
+                            DefaultEdge edge = micrograph.addEdge(microserviceList.get(i), microserviceList.get(j));
                         }
                     }
                 }
+            }
         }
 
 
         return micrograph;
+    }
+
+    public List<Microservice> micropath (GraphPath<OWLOntology, DefaultWeightedEdge> ontopath,
+                                         Graph<Microservice, DefaultEdge> micrograph){
+        List<Microservice> microservicepath = new ArrayList<>();
+        List<OWLOntology> ontologyList = ontopath.getVertexList();
+        //pabaikti veliau. jei yra edgas micrographe ir yra ontopathe idet i patha, jei me pathas neimanomas.
+
+        return microservicepath;
     }*/
 
 }
