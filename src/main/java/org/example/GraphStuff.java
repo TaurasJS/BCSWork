@@ -227,10 +227,39 @@ public class GraphStuff {
     }
 
     public List<Microservice> micropath (GraphPath<OWLOntology, DefaultWeightedEdge> ontopath,
-                                         Graph<Microservice, DefaultEdge> micrograph){
+                                         Graph<Microservice, DefaultEdge> micrograph, List<Microservice> micros){
         List<Microservice> microservicepath = new ArrayList<>();
         List<OWLOntology> ontologyList = ontopath.getVertexList();
-        //pabaikti veliau. jei yra edgas micrographe ir yra ontopathe idet i patha, jei me pathas neimanomas.
+
+        for(int i = 0; i < ontologyList.size(); i++)
+        {
+            for(int j = i+1; j<ontologyList.size()-1; j++)
+            {
+                Microservice micro1 = null;
+                Microservice micro2 = null;
+
+                //gets two microservices according to ontologies we are checking
+                for(int z = 0; z < micros.size(); z++)
+                {
+                    if(micros.get(z).microserviceOntology.equals(ontologyList.get(i)))
+                    {
+                        micro1 = micros.get(z);
+                    } else if (micros.get(z).microserviceOntology.equals(ontologyList.get(j))) {
+                        micro2 = micros.get(z);
+                    }
+                }
+
+                //duplications should be avoided because they are only added if their ontologies are in a path.
+                //ontopath should not have repeating ontologies.
+                //we check using micrograph, beacause they should not be added to path if there is no edge between them
+                //in the microservice graph. There is only and edge if their output/input types are compatible.
+                if (micrograph.containsEdge(micro1, micro2))
+                {
+                    microservicepath.add(micro1);
+                    microservicepath.add(micro2);
+                }
+            }
+        }
 
         return microservicepath;
     }*/
