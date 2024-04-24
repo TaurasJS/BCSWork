@@ -226,42 +226,48 @@ public class GraphStuff {
         return micrograph;
     }
 
-    public List<Microservice> micropath (GraphPath<OWLOntology, DefaultWeightedEdge> ontopath,
-                                         Graph<Microservice, DefaultEdge> micrograph, List<Microservice> micros){
-        List<Microservice> microservicepath = new ArrayList<>();
-        List<OWLOntology> ontologyList = ontopath.getVertexList();
+    public DirectedMultigraph<Microservice, DefaultEdge> trimmicrograph (GraphPath<OWLOntology, DefaultWeightedEdge> ontopath,
+                                                            DirectedMultigraph<Microservice, DefaultEdge> micrograph, List<Microservice> micros){
+        List<OWLOntology> pathontos = ontopath.getVertexList();
+        List<Microservice> survivedmicros = new ArrayList<>();
 
-        for(int i = 0; i < ontologyList.size(); i++)
+        for(Microservice m : micros)
         {
-            for(int j = i+1; j<ontologyList.size()-1; j++)
-            {
-                Microservice micro1 = null;
-                Microservice micro2 = null;
-
-                //gets two microservices according to ontologies we are checking
-                for(int z = 0; z < micros.size(); z++)
-                {
-                    if(micros.get(z).microserviceOntology.equals(ontologyList.get(i)))
-                    {
-                        micro1 = micros.get(z);
-                    } else if (micros.get(z).microserviceOntology.equals(ontologyList.get(j))) {
-                        micro2 = micros.get(z);
-                    }
-                }
-
-                //duplications should be avoided because they are only added if their ontologies are in a path.
-                //ontopath should not have repeating ontologies.
-                //we check using micrograph, beacause they should not be added to path if there is no edge between them
-                //in the microservice graph. There is only and edge if their output/input types are compatible.
-                if (micrograph.containsEdge(micro1, micro2))
-                {
-                    microservicepath.add(micro1);
-                    microservicepath.add(micro2);
-                }
+            if(!pathontos.contains(m.microserviceOntology)){
+                micrograph.removeVertex(m);
             }
         }
 
-        return microservicepath;
+
+        return micrograph;
+    }
+
+    public DirectedMultigraph<Microservice, DefaultEdge> Orchestrator (List<Microservice> microservices)
+            throws  OWLOntologyStorageException{
+        List<OWLOntology> ontologies = new ArrayList<>();
+
+        //gets a list of all ontologies in microservices
+        for(Microservice m : microservices)
+        {
+            ontologies.add(m.microserviceOntology);
+        }
+
+        //maps those ontologies one to each other with similarity score between them
+        Multimap<OWLOntology, Fun.Tuple2<OWLOntology, Double>> ontomap = genmap(ontologies);
+
+        //generates ontology graph
+        DirectedWeightedMultigraph<OWLOntology, DefaultWeightedEdge> ontograph = genGraph(ontomap);
+
+        // finds the path in ontology graph
+        GraphPath<OWLOntology, DefaultWeightedEdge> ontopath = AStarpath(ontologies.get(0), ontologies.get(ontologies.size()-1),
+                ontograph);
+
+        //generates microservice graph
+        DirectedMultigraph<Microservice, DefaultEdge> micrograph = genGraphmicro(ontograph, microservices);
+        //trims the graph according to ontologies path
+        micrograph = trimmicrograph(ontopath, micrograph, microservices);
+
+        return micrograph;
     }*/
 
 }
